@@ -22,7 +22,7 @@ namespace Controller
         public int playerCount;
         public PlayerController myPlayerController;
         private PhotonView _gameManagerPhotonView;
-        public Dictionary<int, int> ReadyList;
+        public Dictionary<int, int> ReadyDict;
         public bool canNext;
         public int nowTurn;
         public int nowTile;
@@ -50,7 +50,7 @@ namespace Controller
             playerCount = PhotonNetwork.CurrentRoom.PlayerCount;
             _gameManagerPhotonView = GameManager.instance.GetComponent<PhotonView>();
             canNext = true;
-            ReadyList = new Dictionary<int, int>();
+            ReadyDict = new Dictionary<int, int>();
         }
 
         private void Start()
@@ -63,6 +63,7 @@ namespace Controller
                 //得到出牌权
                 _gameManagerPhotonView.RPC(nameof(GameManager.instance.NextTurn), RpcTarget.All,
                     myPlayerController.playerID);
+                
                 //_gameManagerPhotonView.RPC(nameof(GameManager.instance.SendID), RpcTarget.All,0);
                 //_gameManagerPhotonView.RPC(nameof(GameManager.instance.CanNext),RpcTarget.All,true);
             });
@@ -113,9 +114,9 @@ namespace Controller
         private void Update()
         {
             if (!PhotonNetwork.IsMasterClient) return;
-            if (ReadyList.Count != playerCount) return;
-            bool flag = false;
-            foreach (var item in ReadyList)
+            if (ReadyDict.Count != playerCount) return;
+            var flag = false;
+            foreach (var item in ReadyDict)
             {
                 if (item.Value != 0)
                 {
@@ -144,7 +145,7 @@ namespace Controller
                 }
             }
 
-            ReadyList.Clear();
+            ReadyDict.Clear();
             if (!flag)
             {
                 //下一回合，给下一位发牌

@@ -67,6 +67,7 @@ public class MouseEvent : MonoBehaviourPunCallbacks
         //我打出一张牌
         _gameManagerPhotonView.RPC(nameof(GameManager.instance.PlayTile), RpcTarget.All, id,
             GameController.instance.myPlayerController.playerID);
+        
         GameController.instance.NotMyTurn();
     }
 }

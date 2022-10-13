@@ -174,7 +174,7 @@ namespace Manager
                 //是主客户端，直接加入
                 if (PhotonNetwork.IsMasterClient)
                 {
-                    GameController.instance.ReadyList.Add(playerID,0);
+                    GameController.instance.ReadyDict.Add(playerID,0);
                 }
                 //向主客户端发送自己的状态
                 else
@@ -189,7 +189,7 @@ namespace Manager
                 //是主客户端，直接加入
                 if (PhotonNetwork.IsMasterClient)
                 {
-                    GameController.instance.ReadyList.Add(GameController.instance.myPlayerController.playerID,flag);
+                    GameController.instance.ReadyDict.Add(GameController.instance.myPlayerController.playerID,flag);
                 }
                 //向主客户端发送自己的状态
                 else
@@ -202,7 +202,7 @@ namespace Manager
         [PunRPC]
         public void Send(int id,int flag)
         {
-            GameController.instance.ReadyList.Add(id, flag);
+            GameController.instance.ReadyDict.Add(id, flag);
         }
         
 
