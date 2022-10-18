@@ -26,7 +26,7 @@ public class Launcher : MonoBehaviourPunCallbacks
     }
 
     // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
         PhotonNetwork.ConnectUsingSettings();
     }

@@ -4,7 +4,6 @@ using DG.Tweening;
 using Manager;
 using Photon.Pun;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace Controller
