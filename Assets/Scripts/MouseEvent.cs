@@ -12,6 +12,7 @@ public class MouseEvent : MonoBehaviourPunCallbacks
     public int id;
     public int num;
     private PhotonView _gameManagerPhotonView;
+    public bool canPlay = true;
     private void Awake()
     {
         _photonView = gameObject.GetComponent<PhotonView>();
@@ -21,6 +22,7 @@ public class MouseEvent : MonoBehaviourPunCallbacks
     private void OnMouseEnter()
     {
         if (!_photonView.IsMine) return;
+        if (!canPlay) return;
         var transform1 = transform;
         transform1.localScale = new Vector3(3f, 3f, 3f);
         transform1.localPosition += new Vector3(0f, 1f, 0f);
@@ -29,6 +31,7 @@ public class MouseEvent : MonoBehaviourPunCallbacks
     private void OnMouseExit()
     {
         if (!_photonView.IsMine) return;
+        if (!canPlay) return;
         var transform1 = transform;
         transform1.localScale = new Vector3(2f, 2f, 2f);
         transform1.localPosition -= new Vector3(0f, 1f, 0f);
@@ -37,6 +40,7 @@ public class MouseEvent : MonoBehaviourPunCallbacks
     private void OnMouseDown()
     {
         if (!_photonView.IsMine) return;
+        if (!canPlay) return;
         if (!GameController.instance.myPlayerController.isMyTurn) return;
         var transform1 = transform;
         transform1.DOMove(Vector3.zero, 1f);
@@ -61,13 +65,14 @@ public class MouseEvent : MonoBehaviourPunCallbacks
                 GameController.instance.myPlayerController.MyMahjong[id].Remove(t);
             }
         }
-        GameController.instance.SortMyMahjong(id,num);
+        GameController.instance.SortMyMahjong();
         var next = GameController.instance.myPlayerController.playerID + 1 > GameController.instance.playerCount
             ? 1 : GameController.instance.myPlayerController.playerID + 1;
         //我打出一张牌
         _gameManagerPhotonView.RPC(nameof(GameManager.instance.PlayTile), RpcTarget.All, id,
             GameController.instance.myPlayerController.playerID);
-        
         GameController.instance.NotMyTurn();
+        //_gameManagerPhotonView.RPC(nameof(GameManager.instance.StoreTile), RpcTarget.MasterClient, gameObject);
+        GameController.instance.tile = gameObject;
     }
 }

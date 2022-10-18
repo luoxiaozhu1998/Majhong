@@ -51,6 +51,14 @@ MonoBehaviour:
   - CanP
   - CanH
   - CanK
+  - HideButton
+  - StoreTile
+  - DestroyItem
+  - CanKAndH
+  - CanPAndH
+  - CanPAndK
+  - CanPAndKAndH
+  - ShowResult
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

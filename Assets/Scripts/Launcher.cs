@@ -28,7 +28,7 @@ public class Launcher : MonoBehaviourPunCallbacks
     // Start is called before the first frame update
     private void Start()
     {
-        PhotonNetwork.ConnectUsingSettings();
+        
     }
 
     public override void OnConnectedToMaster()
@@ -38,6 +38,11 @@ public class Launcher : MonoBehaviourPunCallbacks
         PhotonNetwork.AutomaticallySyncScene = true;
     }
 
+    public void JoinLobby()
+    {
+        GameManager.instance.OpenMenu("LoadingMenu");
+        PhotonNetwork.ConnectUsingSettings();
+    }
     public override void OnJoinedLobby()
     {
         GameManager.instance.OpenMenu("TitleMenu");
@@ -120,6 +125,7 @@ public class Launcher : MonoBehaviourPunCallbacks
 
     public void StartGame()
     {
+        GameManager.instance.OpenMenu("LoadingMenu");
         PhotonNetwork.LoadLevel(1);
     }
 

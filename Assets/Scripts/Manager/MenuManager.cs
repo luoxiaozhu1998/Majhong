@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Photon.Pun;
 using UnityEngine;
 
 namespace Manager
@@ -11,9 +12,19 @@ namespace Manager
         public MenuManager()
         {
             _menus = GameManager.instance.GetMenus();
-            foreach (var t in _menus)
+            if (!PhotonNetwork.IsConnected)
             {
-                t.Value.SetActive(t.Key == "LoadingMenu");
+                foreach (var t in _menus)
+                {
+                    t.Value.SetActive(t.Key == "StartMenu");
+                }
+            }
+            else
+            {
+                foreach (var t in _menus)
+                {
+                    t.Value.SetActive(t.Key == "FindRoomMenu");
+                }
             }
         }
 

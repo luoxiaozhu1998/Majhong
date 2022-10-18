@@ -148,6 +148,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 21
   num: 0
+  canPlay: 0
 --- !u!114 &6421527238400463500
 MonoBehaviour:
   m_ObjectHideFlags: 0

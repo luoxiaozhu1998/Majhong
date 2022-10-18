@@ -31,6 +31,8 @@ namespace Manager
         private readonly List<Vector3> _rotate;
         private readonly List<Vector3> _playerInitRotations;
         private readonly List<Vector3> _playerInitPositions;
+        private readonly List<Vector3> _playerPutPositions;
+        private readonly List<Vector3> _playerPutRotations;
         public readonly Dictionary<string, GameObject> Menus;
 
         public ResourceManager()
@@ -53,7 +55,8 @@ namespace Manager
                 {"CreateRoomMenu", GameObject.Find("CreateRoomMenu")},
                 {"RoomMenu", GameObject.Find("RoomMenu")},
                 {"ErrorMenu", GameObject.Find("ErrorMenu")},
-                {"FindRoomMenu", GameObject.Find("FindRoomMenu")}
+                {"FindRoomMenu", GameObject.Find("FindRoomMenu")},
+                {"StartMenu",GameObject.Find("StartMenu")}
             };
 
             _bias = new List<Vector3>
@@ -87,6 +90,20 @@ namespace Manager
                 new(-66f, 15f, 0f),
                 new(0f, 15f, -66f)
             };
+            _playerPutPositions = new List<Vector3>
+            {
+                new (45f,1f,-15f),
+                new (15f,1f,45f),
+                new (-45f,1f,15f),
+                new (-15f,1f,-45f)
+            };
+            _playerPutRotations = new List<Vector3>
+            {
+                new(0f, 90f, 0f),
+                new(0f, 0f, 0f),
+                new(0f, -90f, 0f),
+                new(0f, 180f, 0f)
+            };
         }
 
         public void InitWhenStart()
@@ -110,6 +127,14 @@ namespace Manager
             return _pickPoses;
         }
 
+        public List<Vector3> GetPlayerPutPositions()
+        {
+            return _playerPutPositions;
+        }
+        public List<Vector3> GetPlayerPutRotations()
+        {
+            return _playerPutRotations;
+        }
         /// <summary>
         /// 分割麻将为count组,第一组14个,后count-1组13个
         /// </summary>
@@ -160,7 +185,8 @@ namespace Manager
                 var go = PhotonNetwork.Instantiate(
                     _userMahjongLists[id][i].Name, pos,
                     Quaternion.Euler(_rotate[id]));
-                go.GetComponent<MouseEvent>().id = _userMahjongLists[id][i].ID;
+                var script = go.GetComponent<MouseEvent>();
+                script.id = _userMahjongLists[id][i].ID;
                 pos += _bias[id];
                 go.transform.localScale = new Vector3(2f, 2f, 2f);
                 if (!ret.ContainsKey(_userMahjongLists[id][i].ID))
@@ -168,7 +194,8 @@ namespace Manager
                     ret[_userMahjongLists[id][i].ID] = new List<GameObject>();
                 }
                 ret[_userMahjongLists[id][i].ID].Add(go);
-                go.GetComponent<MouseEvent>().num = i + 1;
+                script.num = i + 1;
+                script.canPlay = true;
             }
             return ret;
         }
