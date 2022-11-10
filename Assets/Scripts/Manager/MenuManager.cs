@@ -11,7 +11,7 @@ namespace Manager
 
         public MenuManager()
         {
-            _menus = GameManager.instance.GetMenus();
+            _menus = GameManager.Instance.GetMenus();
             if (!PhotonNetwork.IsConnected)
             {
                 foreach (var t in _menus)

@@ -5,7 +5,6 @@ using Manager;
 using Photon.Pun;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace Controller
@@ -15,7 +14,7 @@ namespace Controller
     /// </summary>
     public class GameController : MonoBehaviourPunCallbacks
     {
-        public static GameController instance { get; private set; }
+        public static GameController Instance { get; private set; }
         public Button pongButton;
         public Button kongButton;
         public Button skipButton;
@@ -31,33 +30,35 @@ namespace Controller
         public Image bg;
         public TMP_Text text;
         public Button button;
-
+        public Transform canvas;
         /// <summary>
         /// 初始化
         /// </summary>
         private void Awake()
         {
-            if (instance)
+            if (Instance)
             {
                 Destroy(gameObject);
             }
 
-            instance = this;
-            pongButton = GameObject.Find("Canvas").transform.GetChild(0).GetChild(0)
+            Instance = this;
+            canvas = GameObject.Find("Canvas").transform;
+            pongButton = canvas.GetChild(0).GetChild(0)
                 .GetComponent<Button>();
-            kongButton = GameObject.Find("Canvas").transform.GetChild(0).GetChild(1)
+            kongButton = canvas.GetChild(0).GetChild(1)
                 .GetComponent<Button>();
-            winButton = GameObject.Find("Canvas").transform.GetChild(0).GetChild(2)
+            winButton = canvas.GetChild(0).GetChild(2)
                 .GetComponent<Button>();
-            skipButton = GameObject.Find("Canvas").transform.GetChild(0).GetChild(3)
+            skipButton = canvas.GetChild(0).GetChild(3)
                 .GetComponent<Button>();
             pongButton.gameObject.SetActive(false);
             skipButton.gameObject.SetActive(false);
             kongButton.gameObject.SetActive(false);
             winButton.gameObject.SetActive(false);
             bg.gameObject.SetActive(false);
+            bg.GetComponent<Image>().raycastTarget = false;
             playerCount = PhotonNetwork.CurrentRoom.PlayerCount;
-            _gameManagerPhotonView = GameManager.instance.GetComponent<PhotonView>();
+            _gameManagerPhotonView = GameManager.Instance.GetComponent<PhotonView>();
             canNext = true;
             ReadyDict = new Dictionary<int, int>();
         }
@@ -70,38 +71,38 @@ namespace Controller
             pongButton.onClick.AddListener(() =>
             {
                 //得到出牌权（但是不发牌）
-                _gameManagerPhotonView.RPC(nameof(GameManager.instance.NextTurn), RpcTarget.All,
+                _gameManagerPhotonView.RPC(nameof(GameManager.Instance.NextTurn), RpcTarget.All,
                     myPlayerController.playerID, false);
-                _gameManagerPhotonView.RPC(nameof(GameManager.instance.HideButton), RpcTarget.All);
+                _gameManagerPhotonView.RPC(nameof(GameManager.Instance.HideButton), RpcTarget.All);
                 DestroyAndGenerate();
             });
             kongButton.onClick.AddListener(() =>
             {
                 //得到出牌权（同时发牌）
-                _gameManagerPhotonView.RPC(nameof(GameManager.instance.NextTurn), RpcTarget.All,
+                _gameManagerPhotonView.RPC(nameof(GameManager.Instance.NextTurn), RpcTarget.All,
                     myPlayerController.playerID, true);
-                _gameManagerPhotonView.RPC(nameof(GameManager.instance.HideButton), RpcTarget.All);
+                _gameManagerPhotonView.RPC(nameof(GameManager.Instance.HideButton), RpcTarget.All);
                 DestroyAndGenerate();
             });
             skipButton.onClick.AddListener(() =>
             {
-                _gameManagerPhotonView.RPC(nameof(GameManager.instance.NextTurn), RpcTarget.All,
+                _gameManagerPhotonView.RPC(nameof(GameManager.Instance.NextTurn), RpcTarget.All,
                     nowTurn, true);
-                _gameManagerPhotonView.RPC(nameof(GameManager.instance.HideButton),
+                _gameManagerPhotonView.RPC(nameof(GameManager.Instance.HideButton),
                     RpcTarget.All);
             });
             winButton.onClick.AddListener(() =>
             {
-                _gameManagerPhotonView.RPC(nameof(GameManager.instance.ShowResult),
+                _gameManagerPhotonView.RPC(nameof(GameManager.Instance.ShowResult),
                     RpcTarget.Others);
                 text.text = "You Win!";
                 bg.gameObject.SetActive(true);
-                _gameManagerPhotonView.RPC(nameof(GameManager.instance.HideButton),
+                _gameManagerPhotonView.RPC(nameof(GameManager.Instance.HideButton),
                     RpcTarget.All);
             });
             button.onClick.AddListener(() =>
             {
-                Destroy(GameManager.instance.gameObject);
+                Destroy(GameManager.Instance.gameObject);
                 PhotonNetwork.LeaveRoom();
             });
         }
@@ -130,17 +131,20 @@ namespace Controller
         private void GeneratePlayers()
         {
             var players = PhotonNetwork.CurrentRoom.Players;
-            GameManager.instance.MahjongSplit(players.Count);
+            GameManager.Instance.MahjongSplit(players.Count);
             foreach (var player in players.Where(player => player.Value.IsLocal))
             {
-                var playerController = GameManager.instance.GeneratePlayer(player.Key - 1)
+                var playerController = GameManager.Instance.GeneratePlayer(player.Key - 1)
                     .GetComponent<PlayerController>();
                 myPlayerController = playerController;
+                canvas.GetComponent<Canvas>().worldCamera =
+                    myPlayerController.GetComponentInChildren<Camera>();
+                canvas.GetComponent<Canvas>().planeDistance = 5.0f;
                 myPlayerController.playerID = player.Key;
-                myPlayerController.putPos = GameManager.instance.GetPlayerPutPositions()[
+                myPlayerController.putPos = GameManager.Instance.GetPlayerPutPositions()[
                     myPlayerController.playerID - 1];
                 myPlayerController.MyMahjong =
-                    GameManager.instance.GenerateMahjongAtStart(player.Key - 1);
+                    GameManager.Instance.GenerateMahjongAtStart(player.Key - 1);
             }
         }
 
@@ -164,37 +168,37 @@ namespace Controller
                     //给他处理
                     //可以碰牌
                     case 1:
-                        _gameManagerPhotonView.RPC(nameof(GameManager.instance.CanP), RpcTarget.All,
+                        _gameManagerPhotonView.RPC(nameof(GameManager.Instance.CanP), RpcTarget.All,
                             item.Key);
                         break;
                     //可以杠牌
                     case 2:
-                        _gameManagerPhotonView.RPC(nameof(GameManager.instance.CanK), RpcTarget.All,
+                        _gameManagerPhotonView.RPC(nameof(GameManager.Instance.CanK), RpcTarget.All,
                             item.Key);
                         break;
                     //可以胡牌
                     case 3:
-                        _gameManagerPhotonView.RPC(nameof(GameManager.instance.CanH), RpcTarget.All,
+                        _gameManagerPhotonView.RPC(nameof(GameManager.Instance.CanH), RpcTarget.All,
                             item.Key);
                         break;
                     case 4:
-                        _gameManagerPhotonView.RPC(nameof(GameManager.instance.CanPAndK),
+                        _gameManagerPhotonView.RPC(nameof(GameManager.Instance.CanPAndK),
                             RpcTarget.All,
                             item.Key);
                         break;
                     //碰且赢
                     case 5:
-                        _gameManagerPhotonView.RPC(nameof(GameManager.instance.CanPAndH),
+                        _gameManagerPhotonView.RPC(nameof(GameManager.Instance.CanPAndH),
                             RpcTarget.All,
                             item.Key);
                         break;
                     case 6:
-                        _gameManagerPhotonView.RPC(nameof(GameManager.instance.CanKAndH),
+                        _gameManagerPhotonView.RPC(nameof(GameManager.Instance.CanKAndH),
                             RpcTarget.All,
                             item.Key);
                         break;
                     case 7:
-                        _gameManagerPhotonView.RPC(nameof(GameManager.instance.CanPAndKAndH),
+                        _gameManagerPhotonView.RPC(nameof(GameManager.Instance.CanPAndKAndH),
                             RpcTarget.All,
                             item.Key);
                         break;
@@ -210,7 +214,7 @@ namespace Controller
             if (!flag)
             {
                 //下一回合，给下一位发牌
-                _gameManagerPhotonView.RPC(nameof(GameManager.instance.NextTurn), RpcTarget.All,
+                _gameManagerPhotonView.RPC(nameof(GameManager.Instance.NextTurn), RpcTarget.All,
                     nowTurn, true);
             }
         }
@@ -241,10 +245,10 @@ namespace Controller
                     }
 
                     go.transform.DOMove(
-                        GameManager.instance.GetPickPoses()[
+                        GameManager.Instance.GetPickPoses()[
                                 myPlayerController.playerID - 1]
                             .position +
-                        GameManager.instance.GetBias()[myPlayerController.playerID - 1] *
+                        GameManager.Instance.GetBias()[myPlayerController.playerID - 1] *
                         (script.num - 1), 1f);
                 }
             }
@@ -258,21 +262,21 @@ namespace Controller
                 script.canPlay = false;
                 go.transform.DOMove(myPlayerController.putPos, 1f);
                 go.transform.DORotate(
-                    GameManager.instance.GetPlayerPutRotations()[
+                    GameManager.Instance.GetPlayerPutRotations()[
                         myPlayerController.playerID - 1], 1f);
                 myPlayerController.putPos +=
-                    GameManager.instance.GetBias()[myPlayerController.playerID - 1];
+                    GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
                 script.num = 0;
             }
 
             var newGo = PhotonNetwork.Instantiate("mahjong_tile_" + nowTile,
                 myPlayerController.putPos,
-                Quaternion.Euler(GameManager.instance.GetPlayerPutRotations()[
+                Quaternion.Euler(GameManager.Instance.GetPlayerPutRotations()[
                     myPlayerController.playerID - 1]));
             newGo.GetComponent<MouseEvent>().num = 0;
             myPlayerController.MyMahjong[nowTile].Add(newGo);
             SortMyMahjong();
-            _gameManagerPhotonView.RPC(nameof(GameManager.instance.DestroyItem),
+            _gameManagerPhotonView.RPC(nameof(GameManager.Instance.DestroyItem),
                 RpcTarget.MasterClient);
         }
 

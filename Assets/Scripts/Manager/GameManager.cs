@@ -13,7 +13,7 @@ namespace Manager
     /// </summary>
     public class GameManager : MonoBehaviourPunCallbacks
     {
-        public static GameManager instance { get; private set; }
+        public static GameManager Instance { get; private set; }
 
         private ResourceManager _resourceManager;
 
@@ -21,13 +21,13 @@ namespace Manager
 
         private void Awake()
         {
-            if (instance)
+            if (Instance)
             {
                 Destroy(gameObject);
             }
 
             DontDestroyOnLoad(gameObject);
-            instance = this;
+            Instance = this;
             _resourceManager = new ResourceManager();
             _menuManager = new MenuManager();
         }
@@ -53,7 +53,7 @@ namespace Manager
         {
             if (scene.buildIndex != 1) return; //we are in the game scene
             InitWhenStart();
-            GameController.instance.StartGame();
+            GameController.Instance.StartGame();
             
         }
 
@@ -143,9 +143,9 @@ namespace Manager
         [PunRPC]
         public void NextTurn(int nextUserId, bool drawTile)
         {
-            if (GameController.instance.myPlayerController.playerID == nextUserId)
+            if (GameController.Instance.myPlayerController.playerID == nextUserId)
             {
-                GameController.instance.myPlayerController.isMyTurn = true;
+                GameController.Instance.myPlayerController.isMyTurn = true;
                 if (drawTile)
                 {
                     var go = PhotonNetwork.Instantiate(GetMahjongList()[0].Name,
@@ -153,7 +153,7 @@ namespace Manager
                         Quaternion.Euler(GetRotateList()[nextUserId - 1]));
                     var newScript = go.GetComponent<MouseEvent>();
                     newScript.canPlay = true;
-                    var myMahjong = GameController.instance.myPlayerController.MyMahjong;
+                    var myMahjong = GameController.Instance.myPlayerController.MyMahjong;
                     newScript.id = GetMahjongList()[0].ID;
                     if (!myMahjong.ContainsKey(newScript.id))
                     {
@@ -179,13 +179,13 @@ namespace Manager
                     if (myMahjong[newScript.id].Count == 4)
                     {
                         photonView.RPC(nameof(CanK), RpcTarget.All,
-                            GameController.instance.myPlayerController.playerID);
+                            GameController.Instance.myPlayerController.playerID);
                     }
                 }
             }
             else
             {
-                GameController.instance.myPlayerController.isMyTurn = false;
+                GameController.Instance.myPlayerController.isMyTurn = false;
             }
 
             if (drawTile)
@@ -198,19 +198,19 @@ namespace Manager
         public void PlayTile(int id, int playerID)
         {
             //每个客户端先把把当前轮次的ID设置好（下面代码可能会更改）
-            GameController.instance.nowTurn = playerID == PhotonNetwork.CurrentRoom.PlayerCount
+            GameController.Instance.nowTurn = playerID == PhotonNetwork.CurrentRoom.PlayerCount
                 ? 1
                 : playerID + 1;
             //每个客户端先把把当前轮次的牌ID设置好（下面代码可能会更改）
-            GameController.instance.nowTile = id;
-            var thisID = GameController.instance.myPlayerController.playerID;
+            GameController.Instance.nowTile = id;
+            var thisID = GameController.Instance.myPlayerController.playerID;
             //打出牌的一定准备好了
             if (playerID == thisID)
             {
                 //是主客户端，直接加入
                 if (PhotonNetwork.IsMasterClient)
                 {
-                    GameController.instance.ReadyDict.Add(playerID, 0);
+                    GameController.Instance.ReadyDict.Add(playerID, 0);
                 }
                 //向主客户端发送自己的状态
                 else
@@ -221,18 +221,18 @@ namespace Manager
             else
             {
                 //check自己的状态
-                var flag = GameController.instance.CheckMyState(id);
+                var flag = GameController.Instance.CheckMyState(id);
                 //是主客户端，直接加入
                 if (PhotonNetwork.IsMasterClient)
                 {
-                    GameController.instance.ReadyDict.Add(
-                        GameController.instance.myPlayerController.playerID, flag);
+                    GameController.Instance.ReadyDict.Add(
+                        GameController.Instance.myPlayerController.playerID, flag);
                 }
                 //向主客户端发送自己的状态
                 else
                 {
                     photonView.RPC(nameof(Send), RpcTarget.MasterClient,
-                        GameController.instance.myPlayerController.playerID, flag);
+                        GameController.Instance.myPlayerController.playerID, flag);
                 }
             }
         }
@@ -240,14 +240,14 @@ namespace Manager
         [PunRPC]
         public void Send(int id, int flag)
         {
-            GameController.instance.ReadyDict.Add(id, flag);
+            GameController.Instance.ReadyDict.Add(id, flag);
         }
 
 
         [PunRPC]
         public void CanNext(bool flag)
         {
-            GameController.instance.canNext = flag;
+            GameController.Instance.canNext = flag;
         }
 
         /// <summary>
@@ -257,9 +257,9 @@ namespace Manager
         [PunRPC]
         public void CanP(int id)
         {
-            if (id != GameController.instance.myPlayerController.playerID) return;
-            GameController.instance.pongButton.gameObject.SetActive(true);
-            GameController.instance.skipButton.gameObject.SetActive(true);
+            if (id != GameController.Instance.myPlayerController.playerID) return;
+            GameController.Instance.pongButton.gameObject.SetActive(true);
+            GameController.Instance.skipButton.gameObject.SetActive(true);
         }
 
         /// <summary>
@@ -269,10 +269,10 @@ namespace Manager
         [PunRPC]
         public void CanK(int id)
         {
-            if (id != GameController.instance.myPlayerController.playerID) return;
-            GameController.instance.pongButton.gameObject.SetActive(true);
-            GameController.instance.kongButton.gameObject.SetActive(true);
-            GameController.instance.skipButton.gameObject.SetActive(true);
+            if (id != GameController.Instance.myPlayerController.playerID) return;
+            GameController.Instance.pongButton.gameObject.SetActive(true);
+            GameController.Instance.kongButton.gameObject.SetActive(true);
+            GameController.Instance.skipButton.gameObject.SetActive(true);
         }
 
         /// <summary>
@@ -282,73 +282,73 @@ namespace Manager
         [PunRPC]
         public void CanH(int id)
         {
-            if (id != GameController.instance.myPlayerController.playerID) return;
-            GameController.instance.winButton.gameObject.SetActive(true);
-            GameController.instance.skipButton.gameObject.SetActive(true);
+            if (id != GameController.Instance.myPlayerController.playerID) return;
+            GameController.Instance.winButton.gameObject.SetActive(true);
+            GameController.Instance.skipButton.gameObject.SetActive(true);
         }
 
         [PunRPC]
         public void CanPAndK(int id)
         {
-            if (id != GameController.instance.myPlayerController.playerID) return;
-            GameController.instance.pongButton.gameObject.SetActive(true);
-            GameController.instance.kongButton.gameObject.SetActive(true);
-            GameController.instance.skipButton.gameObject.SetActive(true);
+            if (id != GameController.Instance.myPlayerController.playerID) return;
+            GameController.Instance.pongButton.gameObject.SetActive(true);
+            GameController.Instance.kongButton.gameObject.SetActive(true);
+            GameController.Instance.skipButton.gameObject.SetActive(true);
         }
 
         [PunRPC]
         public void CanPAndH(int id)
         {
-            if (id != GameController.instance.myPlayerController.playerID) return;
-            GameController.instance.pongButton.gameObject.SetActive(true);
-            GameController.instance.winButton.gameObject.SetActive(true);
-            GameController.instance.skipButton.gameObject.SetActive(true);
+            if (id != GameController.Instance.myPlayerController.playerID) return;
+            GameController.Instance.pongButton.gameObject.SetActive(true);
+            GameController.Instance.winButton.gameObject.SetActive(true);
+            GameController.Instance.skipButton.gameObject.SetActive(true);
         }
 
         [PunRPC]
         public void CanKAndH(int id)
         {
-            if (id != GameController.instance.myPlayerController.playerID) return;
-            GameController.instance.kongButton.gameObject.SetActive(true);
-            GameController.instance.winButton.gameObject.SetActive(true);
-            GameController.instance.skipButton.gameObject.SetActive(true);
+            if (id != GameController.Instance.myPlayerController.playerID) return;
+            GameController.Instance.kongButton.gameObject.SetActive(true);
+            GameController.Instance.winButton.gameObject.SetActive(true);
+            GameController.Instance.skipButton.gameObject.SetActive(true);
         }
 
         [PunRPC]
         public void CanPAndKAndH(int id)
         {
-            if (id != GameController.instance.myPlayerController.playerID) return;
-            GameController.instance.pongButton.gameObject.SetActive(true);
-            GameController.instance.kongButton.gameObject.SetActive(true);
-            GameController.instance.winButton.gameObject.SetActive(true);
-            GameController.instance.skipButton.gameObject.SetActive(true);
+            if (id != GameController.Instance.myPlayerController.playerID) return;
+            GameController.Instance.pongButton.gameObject.SetActive(true);
+            GameController.Instance.kongButton.gameObject.SetActive(true);
+            GameController.Instance.winButton.gameObject.SetActive(true);
+            GameController.Instance.skipButton.gameObject.SetActive(true);
         }
 
         [PunRPC]
         public void HideButton()
         {
-            GameController.instance.pongButton.gameObject.SetActive(false);
-            GameController.instance.kongButton.gameObject.SetActive(false);
-            GameController.instance.skipButton.gameObject.SetActive(false);
+            GameController.Instance.pongButton.gameObject.SetActive(false);
+            GameController.Instance.kongButton.gameObject.SetActive(false);
+            GameController.Instance.skipButton.gameObject.SetActive(false);
         }
 
         [PunRPC]
         public void StoreTile(GameObject go)
         {
-            GameController.instance.tile = go;
+            GameController.Instance.tile = go;
         }
 
         [PunRPC]
         public void DestroyItem()
         {
-            PhotonNetwork.Destroy(GameController.instance.tile);
+            PhotonNetwork.Destroy(GameController.Instance.tile);
         }
 
         [PunRPC]
         public void ShowResult(int id)
         {
-            GameController.instance.text.text = "You Lose!";
-            GameController.instance.bg.gameObject.SetActive(true);
+            GameController.Instance.text.text = "You Lose!";
+            GameController.Instance.bg.gameObject.SetActive(true);
         }
 
         public void JoinLobby()

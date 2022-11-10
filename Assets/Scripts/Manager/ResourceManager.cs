@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Photon.Pun;
+using Tools;
 using UnityEngine;
 
 namespace Manager
@@ -37,9 +38,9 @@ namespace Manager
 
         public ResourceManager()
         {
-            for (var j = 0; j < 4; j++)
+            for (var j = 0; j < Constants.MaxPlayer; j++)
             {
-                for (var i = 1; i <= 27; i++)
+                for (var i = 1; i <= Constants.MaxId; i++)
                 {
                     _mahjongList.Add(
                         new Mahjong(i, "mahjong_tile_" + i));
@@ -108,7 +109,7 @@ namespace Manager
 
         public void InitWhenStart()
         {
-            for (var i = 1; i <= 4; i++)
+            for (var i = 1; i <= Constants.MaxPlayer; i++)
             {
                 _pickPoses.Add(GameObject.Find("PickPos" + i).transform);
             }

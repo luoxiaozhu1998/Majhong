@@ -40,12 +40,12 @@ public class Launcher : MonoBehaviourPunCallbacks
 
     public void JoinLobby()
     {
-        GameManager.instance.OpenMenu("LoadingMenu");
+        GameManager.Instance.OpenMenu("LoadingMenu");
         PhotonNetwork.ConnectUsingSettings();
     }
     public override void OnJoinedLobby()
     {
-        GameManager.instance.OpenMenu("TitleMenu");
+        GameManager.Instance.OpenMenu("TitleMenu");
         Debug.Log("OnJoinedLobby()");
         PhotonNetwork.NickName = "Player" + Random.Range(0, 1000).ToString("0000");
     }
@@ -57,13 +57,13 @@ public class Launcher : MonoBehaviourPunCallbacks
             return;
         }
         PhotonNetwork.CreateRoom(roomNameInputField.text, new RoomOptions {MaxPlayers = 4});
-        GameManager.instance.OpenMenu("LoadingMenu");
+        GameManager.Instance.OpenMenu("LoadingMenu");
     }
 
     public override void OnJoinedRoom()
     {
         roomNameText.text = PhotonNetwork.CurrentRoom.Name;
-        GameManager.instance.OpenMenu("RoomMenu");
+        GameManager.Instance.OpenMenu("RoomMenu");
         foreach (Transform item in playerListContent)
         {
             Destroy(item.gameObject);
@@ -81,18 +81,18 @@ public class Launcher : MonoBehaviourPunCallbacks
     public override void OnJoinRoomFailed(short returnCode, string message)
     {
         errorText.text = "Room Creation Failed" + message;
-        GameManager.instance.OpenMenu("ErrorMenu");
+        GameManager.Instance.OpenMenu("ErrorMenu");
     }
 
     public void LeaveRoom()
     {
         PhotonNetwork.LeaveRoom();
-        GameManager.instance.OpenMenu("LoadingMenu");
+        GameManager.Instance.OpenMenu("LoadingMenu");
     }
 
     public override void OnLeftRoom()
     {
-        GameManager.instance.OpenMenu("TitleMenu");
+        GameManager.Instance.OpenMenu("TitleMenu");
     }
 
     public override void OnRoomListUpdate(List<RoomInfo> roomList)
@@ -112,7 +112,7 @@ public class Launcher : MonoBehaviourPunCallbacks
 
     public void JoinRoom(RoomInfo info)
     {
-        GameManager.instance.OpenMenu("LoadingMenu");
+        GameManager.Instance.OpenMenu("LoadingMenu");
         PhotonNetwork.JoinRoom(info.Name);
     }
 
@@ -125,7 +125,7 @@ public class Launcher : MonoBehaviourPunCallbacks
 
     public void StartGame()
     {
-        GameManager.instance.OpenMenu("LoadingMenu");
+        GameManager.Instance.OpenMenu("LoadingMenu");
         PhotonNetwork.LoadLevel(1);
     }
 
