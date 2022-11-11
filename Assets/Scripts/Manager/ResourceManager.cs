@@ -13,7 +13,7 @@ namespace Manager
         /// <summary>
         /// 加载的所有麻将
         /// </summary>
-        private readonly List<Mahjong> _mahjongList = new();
+        private List<Mahjong> _mahjongList = new();
 
         /// <summary>
         /// 每个玩家的麻将
@@ -30,6 +30,8 @@ namespace Manager
 
         private readonly List<Vector3> _bias;
         private readonly List<Vector3> _rotate;
+        private readonly List<Vector3> _kongRotate;
+        private readonly List<Vector3> _new;
         private readonly List<Vector3> _playerInitRotations;
         private readonly List<Vector3> _playerInitPositions;
         private readonly List<Vector3> _playerPutPositions;
@@ -48,7 +50,6 @@ namespace Manager
             }
 
             _mahjongList = _mahjongList.OrderBy(_ => Guid.NewGuid()).ToList();
-
             Menus = new Dictionary<string, GameObject>
             {
                 {"LoadingMenu", GameObject.Find("LoadingMenu")},
@@ -57,7 +58,7 @@ namespace Manager
                 {"RoomMenu", GameObject.Find("RoomMenu")},
                 {"ErrorMenu", GameObject.Find("ErrorMenu")},
                 {"FindRoomMenu", GameObject.Find("FindRoomMenu")},
-                {"StartMenu",GameObject.Find("StartMenu")}
+                {"StartMenu", GameObject.Find("StartMenu")}
             };
 
             _bias = new List<Vector3>
@@ -66,6 +67,18 @@ namespace Manager
                 new(-3f, 0f, 0f),
                 new(0f, 0f, -3f),
                 new(3f, 0f, 0f)
+            };
+            _kongRotate = new List<Vector3>
+            {
+                new(0f, 180f, 0f),
+                new(0f, -180f, 0f),
+            };
+            _new = new List<Vector3>
+            {
+                new(35.0f, 2.0f, 21.0f),
+                new(-21.0f, 2.0f, 35.0f),
+                new(-35.0f, 2.0f, -21.0f),
+                new(21.0f, 2.0f, -35.0f),
             };
 
             _rotate = new List<Vector3>
@@ -93,10 +106,10 @@ namespace Manager
             };
             _playerPutPositions = new List<Vector3>
             {
-                new (45f,1f,-15f),
-                new (15f,1f,45f),
-                new (-45f,1f,15f),
-                new (-15f,1f,-45f)
+                new(45f, 1f, -15f),
+                new(15f, 1f, 45f),
+                new(-45f, 1f, 15f),
+                new(-15f, 1f, -45f)
             };
             _playerPutRotations = new List<Vector3>
             {
@@ -115,14 +128,21 @@ namespace Manager
             }
         }
 
+        public List<Vector3> GetNewList()
+        {
+            return _new;
+        }
+
         public List<Vector3> GetRotateList()
         {
             return _rotate;
         }
+
         public List<Vector3> GetBias()
         {
             return _bias;
         }
+
         public List<Transform> GetPickPoses()
         {
             return _pickPoses;
@@ -132,10 +152,12 @@ namespace Manager
         {
             return _playerPutPositions;
         }
+
         public List<Vector3> GetPlayerPutRotations()
         {
             return _playerPutRotations;
         }
+
         /// <summary>
         /// 分割麻将为count组,第一组14个,后count-1组13个
         /// </summary>
@@ -176,11 +198,11 @@ namespace Manager
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public SortedDictionary<int,List<GameObject>> GenerateMahjongAtStart(int id)
+        public SortedDictionary<int, List<GameObject>> GenerateMahjongAtStart(int id)
         {
             var pos = _pickPoses[id].position;
             var count = id == 0 ? 14 : 13;
-            var ret = new SortedDictionary<int,List<GameObject>>();
+            var ret = new SortedDictionary<int, List<GameObject>>();
             for (var i = 0; i < count; i++)
             {
                 var go = PhotonNetwork.Instantiate(
@@ -194,12 +216,18 @@ namespace Manager
                 {
                     ret[_userMahjongLists[id][i].ID] = new List<GameObject>();
                 }
+
                 ret[_userMahjongLists[id][i].ID].Add(go);
                 script.num = i + 1;
                 script.canPlay = true;
             }
+
             return ret;
         }
-        
+
+        public void SetMahjongList(List<Mahjong> mahjongList)
+        {
+            _mahjongList = mahjongList;
+        }
     }
 }

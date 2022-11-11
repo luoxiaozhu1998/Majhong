@@ -21,11 +21,6 @@ namespace Manager
 
         private void Awake()
         {
-            if (Instance)
-            {
-                Destroy(gameObject);
-            }
-
             DontDestroyOnLoad(gameObject);
             Instance = this;
             _resourceManager = new ResourceManager();
@@ -34,7 +29,7 @@ namespace Manager
 
         private void Start()
         {
-            Screen.SetResolution(1024, 768, false);
+            Screen.SetResolution(1600, 900, false);
         }
 
         public override void OnEnable()
@@ -54,7 +49,6 @@ namespace Manager
             if (scene.buildIndex != 1) return; //we are in the game scene
             InitWhenStart();
             GameController.Instance.StartGame();
-            
         }
 
         #region PlayerManager
@@ -67,6 +61,11 @@ namespace Manager
         {
             return _resourceManager.GetMahjongList();
         }
+        public void SetMahjongList(List<Mahjong> mahjongList)
+        {
+            _resourceManager.SetMahjongList(mahjongList);
+        }
+
 
         public void MahjongSplit(int count)
         {
@@ -113,6 +112,11 @@ namespace Manager
             return _resourceManager.GetPlayerPutPositions();
         }
 
+        public List<Vector3> GetNewPositions()
+        {
+            return _resourceManager.GetNewList();
+        }
+
         public List<Vector3> GetPlayerPutRotations()
         {
             return _resourceManager.GetPlayerPutRotations();
@@ -149,17 +153,21 @@ namespace Manager
                 if (drawTile)
                 {
                     var go = PhotonNetwork.Instantiate(GetMahjongList()[0].Name,
-                        GameObject.Find("NewPos" + nextUserId).transform.position,
+                        GameController.Instance.myPlayerController.putPos,
                         Quaternion.Euler(GetRotateList()[nextUserId - 1]));
                     var newScript = go.GetComponent<MouseEvent>();
                     newScript.canPlay = true;
                     var myMahjong = GameController.Instance.myPlayerController.MyMahjong;
                     newScript.id = GetMahjongList()[0].ID;
+                    newScript.num = 10;
                     if (!myMahjong.ContainsKey(newScript.id))
                     {
                         myMahjong[newScript.id] = new List<GameObject>();
                     }
-
+                    if (GameController.Instance.CheckWin(newScript.id))
+                    {
+                        photonView.RPC(nameof(CanH),RpcTarget.All,GameController.Instance.myPlayerController.playerID);
+                    }
                     myMahjong[newScript.id].Add(go);
                     var idx = 1;
                     foreach (var item in myMahjong)
@@ -178,8 +186,8 @@ namespace Manager
 
                     if (myMahjong[newScript.id].Count == 4)
                     {
-                        photonView.RPC(nameof(CanK), RpcTarget.All,
-                            GameController.Instance.myPlayerController.playerID);
+                        photonView.RPC(nameof(AddKong), RpcTarget.All,
+                            GameController.Instance.myPlayerController.playerID, newScript.id);
                     }
                 }
             }
@@ -275,6 +283,15 @@ namespace Manager
             GameController.Instance.skipButton.gameObject.SetActive(true);
         }
 
+        [PunRPC]
+        public void AddKong(int playerId, int tileId)
+        {
+            if (playerId != GameController.Instance.myPlayerController.playerID) return;
+            GameController.Instance.addKongButton.gameObject.SetActive(true);
+            GameController.Instance.skipButton.gameObject.SetActive(true);
+            GameController.Instance.nowTile = tileId;
+        }
+
         /// <summary>
         /// 可以胡牌的客户端
         /// </summary>
@@ -330,6 +347,8 @@ namespace Manager
             GameController.Instance.pongButton.gameObject.SetActive(false);
             GameController.Instance.kongButton.gameObject.SetActive(false);
             GameController.Instance.skipButton.gameObject.SetActive(false);
+            GameController.Instance.addKongButton.gameObject.SetActive(false);
+            GameController.Instance.winButton.gameObject.SetActive(false);
         }
 
         [PunRPC]
@@ -345,10 +364,10 @@ namespace Manager
         }
 
         [PunRPC]
-        public void ShowResult(int id)
+        public void ShowResult()
         {
-            GameController.Instance.text.text = "You Lose!";
             GameController.Instance.bg.gameObject.SetActive(true);
+            GameController.Instance.text.text = "You Lose!";
         }
 
         public void JoinLobby()
