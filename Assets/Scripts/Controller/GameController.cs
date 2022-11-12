@@ -4,6 +4,7 @@ using DG.Tweening;
 using DG.Tweening.Core;
 using DG.Tweening.Plugins.Options;
 using Manager;
+using Newtonsoft.Json;
 using Photon.Pun;
 using TMPro;
 using UnityEngine;
@@ -44,6 +45,7 @@ namespace Controller
             {
                 Destroy(gameObject);
             }
+
             Instance = this;
             canvas = GameObject.Find("Canvas").transform;
             pongButton = canvas.GetChild(0).GetChild(0).GetComponent<Button>();
@@ -75,7 +77,7 @@ namespace Controller
                 _gameManagerPhotonView.RPC(nameof(GameManager.Instance.NextTurn), RpcTarget.All,
                     myPlayerController.playerID, false);
                 _gameManagerPhotonView.RPC(nameof(GameManager.Instance.HideButton), RpcTarget.All);
-                DestroyAndGenerate();
+                SolvePong();
             });
             kongButton.onClick.AddListener(() =>
             {
@@ -83,7 +85,7 @@ namespace Controller
                 _gameManagerPhotonView.RPC(nameof(GameManager.Instance.NextTurn), RpcTarget.All,
                     myPlayerController.playerID, true);
                 _gameManagerPhotonView.RPC(nameof(GameManager.Instance.HideButton), RpcTarget.All);
-                DestroyAndGenerate();
+                SolveKong();
             });
             addKongButton.onClick.AddListener(() =>
             {
@@ -174,6 +176,52 @@ namespace Controller
             });
         }
 
+        private void SolveKong()
+        {
+            var idx = 0;
+            TweenerCore<Vector3, Vector3, VectorOptions> a = null;
+            foreach (var go in myPlayerController.MyMahjong[nowTile])
+            {
+                var script = go.GetComponent<MouseEvent>();
+                script.canPlay = false;
+                if (idx == 1)
+                {
+                    a = go.transform.DOMove(
+                        myPlayerController.putPos - new Vector3(0.0f, 1.0f, 0.0f), 1f);
+                }
+                else
+                {
+                    go.transform.DOMove(myPlayerController.putPos - new Vector3(0.0f, 1.0f, 0.0f),
+                        1f);
+                }
+                
+                go.transform.DORotate(
+                    GameManager.Instance.GetPlayerPutRotations()[
+                        myPlayerController.playerID - 1], 1f);
+                myPlayerController.putPos -=
+                    GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
+                script.num = 0;
+                idx++;
+            }
+
+            if (a != null)
+            {
+                var newGo = PhotonNetwork.Instantiate("mahjong_tile_" + nowTile,
+                    a.endValue -
+                    myPlayerController.MyMahjong[nowTile][0].transform.forward * 1.5f,
+                    Quaternion.Euler(GameManager.Instance.GetPlayerPutRotations()[
+                        myPlayerController.playerID - 1]));
+                newGo.transform.DORotate(new Vector3(0f, 180.0f, 0.0f), 1f);
+                newGo.GetComponent<MouseEvent>().num = 0;
+                newGo.GetComponent<MouseEvent>().canPlay = false;
+                myPlayerController.MyMahjong[nowTile].Add(newGo);
+            }
+
+            SortMyMahjong();
+            _gameManagerPhotonView.RPC(nameof(GameManager.Instance.DestroyItem),
+                RpcTarget.MasterClient);
+        }
+
         public override void OnLeftRoom()
         {
             PhotonNetwork.LoadLevel(0);
@@ -194,36 +242,38 @@ namespace Controller
         }
 
         [PunRPC]
-        private void SendList(int id)
+        private void SetList(string a, string b)
         {
-            GameManager.Instance.SetMahjongList(PhotonView.Find(id).gameObject
-                .GetComponent<GameManager>().GetMahjongList());
+            GameManager.Instance.SetMahjongList(JsonConvert.DeserializeObject<List<Mahjong>>(a));
+            GameManager.Instance.SetUserMahjongLists(
+                JsonConvert.DeserializeObject<List<List<Mahjong>>>(b));
+            myPlayerController.MyMahjong =
+                GameManager.Instance.GenerateMahjongAtStart(myPlayerController.playerID - 1);
         }
+
         /// <summary>
         /// 生成n个玩家
         /// </summary>
         private void GeneratePlayers()
         {
             var players = PhotonNetwork.CurrentRoom.Players;
-            if (PhotonNetwork.IsMasterClient)
-            {
-                GameManager.Instance.MahjongSplit(players.Count);
-                photonView.RPC(nameof(SendList),RpcTarget.Others,GameManager.Instance.GetComponent<PhotonView>().ViewID);
-            }
-            
             foreach (var player in players.Where(player => player.Value.IsLocal))
             {
-                var playerController = GameManager.Instance.GeneratePlayer(player.Key - 1)
+                var playerController=GameManager.Instance.GeneratePlayer(player.Key - 1)
                     .GetComponent<PlayerController>();
                 myPlayerController = playerController;
-                canvas.GetComponent<Canvas>().worldCamera =
-                    myPlayerController.GetComponentInChildren<Camera>();
                 canvas.GetComponent<Canvas>().planeDistance = 5.0f;
-                myPlayerController.playerID = player.Key;
+                canvas.GetComponent<Canvas>().worldCamera =
+                    GameObject.Find("XR Origin").GetComponentInChildren<Camera>();
+                    myPlayerController.playerID = player.Key;
                 myPlayerController.putPos = GameManager.Instance.GetNewPositions()[
                     myPlayerController.playerID - 1];
-                myPlayerController.MyMahjong =
-                    GameManager.Instance.GenerateMahjongAtStart(player.Key - 1);
+                if (!PhotonNetwork.IsMasterClient) continue;
+                GameManager.Instance.MahjongSplit(players.Count);
+                var a = JsonConvert.SerializeObject(GameManager.Instance.GetMahjongList());
+                var b = JsonConvert.SerializeObject(GameManager.Instance.GetUserMahjongLists());
+                photonView.RPC(nameof(SetList), RpcTarget.All, a, b);
+                
             }
         }
 
@@ -341,7 +391,7 @@ namespace Controller
             }
         }
 
-        private void DestroyAndGenerate()
+        private void SolvePong()
         {
             foreach (var go in myPlayerController.MyMahjong[nowTile])
             {

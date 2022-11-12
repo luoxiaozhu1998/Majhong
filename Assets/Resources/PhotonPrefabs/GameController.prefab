@@ -47,8 +47,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pongButton: {fileID: 0}
   kongButton: {fileID: 0}
+  addKongButton: {fileID: 0}
   skipButton: {fileID: 0}
   winButton: {fileID: 0}
+  playerCount: 0
+  myPlayerController: {fileID: 0}
+  canNext: 0
+  nowTurn: 0
+  nowTile: 0
+  tile: {fileID: 0}
+  bg: {fileID: 0}
+  text: {fileID: 0}
+  button: {fileID: 0}
+  canvas: {fileID: 0}
 --- !u!114 &8947135833163931254
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -18,7 +18,7 @@ namespace Manager
         /// <summary>
         /// 每个玩家的麻将
         /// </summary>
-        private readonly List<List<Mahjong>> _userMahjongLists = new();
+        private List<List<Mahjong>> _userMahjongLists = new();
 
         /// <summary>
         /// 每个玩家发牌位置
@@ -180,6 +180,10 @@ namespace Manager
         {
             return _mahjongList;
         }
+        public List<int> GetMahjongListInt()
+        {
+            return _mahjongList.Select(item => item.ID).ToList();
+        }
 
         /// <summary>
         /// 生成编号为id的玩家
@@ -225,9 +229,23 @@ namespace Manager
             return ret;
         }
 
+        public void SetUserMahjongLists(List<List<Mahjong>> useMahjongList)
+        {
+            _userMahjongLists = useMahjongList;
+        }
+
         public void SetMahjongList(List<Mahjong> mahjongList)
         {
             _mahjongList = mahjongList;
+        }
+
+        public List<List<Mahjong>> GetUserMahjongLists()
+        {
+            return _userMahjongLists;
+        }
+        public List<List<int>> GetUserMahjongListsInt()
+        {
+            return _userMahjongLists.Select(list => list.Select(item => item.ID).ToList()).ToList();
         }
     }
 }

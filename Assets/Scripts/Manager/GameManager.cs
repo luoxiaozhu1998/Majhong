@@ -5,6 +5,7 @@ using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 namespace Manager
 {
@@ -18,9 +19,13 @@ namespace Manager
         private ResourceManager _resourceManager;
 
         private MenuManager _menuManager;
-
+        public PlayerController playerController;
         private void Awake()
         {
+            if (Instance)
+            {
+                Destroy(gameObject);
+            }
             DontDestroyOnLoad(gameObject);
             Instance = this;
             _resourceManager = new ResourceManager();
@@ -65,8 +70,14 @@ namespace Manager
         {
             _resourceManager.SetMahjongList(mahjongList);
         }
-
-
+        public List<List<Mahjong>> GetUserMahjongLists()
+        {
+           return _resourceManager.GetUserMahjongLists();
+        }
+        public void SetUserMahjongLists(List<List<Mahjong>> userMahjongList)
+        {
+            _resourceManager.SetUserMahjongLists(userMahjongList);
+        }
         public void MahjongSplit(int count)
         {
             _resourceManager.MahjongSplit(count);
