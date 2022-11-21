@@ -29,6 +29,7 @@ namespace Controller
         public Dictionary<int, int> ReadyDict;
         public bool canNext;
         public int nowTurn;
+        public int lastTurn;
         public int nowTile;
         [HideInInspector] public GameObject tile;
         public Image bg;
@@ -89,13 +90,13 @@ namespace Controller
             });
             addKongButton.onClick.AddListener(() =>
             {
-                if (!myPlayerController.MyMahjong[nowTile][0].GetComponent<MouseEvent>().canPlay)
+                if (!myPlayerController.MyMahjong[nowTile][0].GetComponent<MahjongAttr>().canPlay)
                 {
                     myPlayerController.MyMahjong[nowTile][3].transform.DOMove(
                         myPlayerController.MyMahjong[nowTile][1].transform.position -
                         myPlayerController.MyMahjong[nowTile][1].transform.forward * 1.5f, 1f);
 
-                    myPlayerController.MyMahjong[nowTile][3].GetComponent<MouseEvent>().canPlay =
+                    myPlayerController.MyMahjong[nowTile][3].GetComponent<MahjongAttr>().canPlay =
                         false;
                     myPlayerController.MyMahjong[nowTile][3].transform
                         .DORotate(new Vector3(0.0f, 180.0f, 0.0f), 1f);
@@ -108,7 +109,7 @@ namespace Controller
                     {
                         if (idx < 3)
                         {
-                            var script = go.GetComponent<MouseEvent>();
+                            var script = go.GetComponent<MahjongAttr>();
                             script.canPlay = false;
                             if (idx == 1)
                             {
@@ -131,7 +132,7 @@ namespace Controller
                         }
                         else
                         {
-                            var script = go.GetComponent<MouseEvent>();
+                            var script = go.GetComponent<MahjongAttr>();
                             script.canPlay = false;
                             script.num = 0;
                             go.transform.DOMove(
@@ -182,7 +183,7 @@ namespace Controller
             TweenerCore<Vector3, Vector3, VectorOptions> a = null;
             foreach (var go in myPlayerController.MyMahjong[nowTile])
             {
-                var script = go.GetComponent<MouseEvent>();
+                var script = go.GetComponent<MahjongAttr>();
                 script.canPlay = false;
                 if (idx == 1)
                 {
@@ -194,7 +195,7 @@ namespace Controller
                     go.transform.DOMove(myPlayerController.putPos - new Vector3(0.0f, 1.0f, 0.0f),
                         1f);
                 }
-                
+
                 go.transform.DORotate(
                     GameManager.Instance.GetPlayerPutRotations()[
                         myPlayerController.playerID - 1], 1f);
@@ -211,15 +212,15 @@ namespace Controller
                     myPlayerController.MyMahjong[nowTile][0].transform.forward * 1.5f,
                     Quaternion.Euler(GameManager.Instance.GetPlayerPutRotations()[
                         myPlayerController.playerID - 1]));
-                newGo.transform.DORotate(new Vector3(0f, 180.0f, 0.0f), 1f);
-                newGo.GetComponent<MouseEvent>().num = 0;
-                newGo.GetComponent<MouseEvent>().canPlay = false;
+                myPlayerController.PlayTileStrategy.KongStrategy(newGo.transform);
+                newGo.GetComponent<MahjongAttr>().num = 0;
+                newGo.GetComponent<MahjongAttr>().canPlay = false;
                 myPlayerController.MyMahjong[nowTile].Add(newGo);
             }
 
             SortMyMahjong();
             _gameManagerPhotonView.RPC(nameof(GameManager.Instance.DestroyItem),
-                RpcTarget.MasterClient);
+                RpcTarget.All, lastTurn);
         }
 
         public override void OnLeftRoom()
@@ -259,13 +260,14 @@ namespace Controller
             var players = PhotonNetwork.CurrentRoom.Players;
             foreach (var player in players.Where(player => player.Value.IsLocal))
             {
-                var playerController=GameManager.Instance.GeneratePlayer(player.Key - 1)
+                var playerController = GameManager.Instance.GeneratePlayer(player.Key - 1)
                     .GetComponent<PlayerController>();
                 myPlayerController = playerController;
                 canvas.GetComponent<Canvas>().planeDistance = 5.0f;
                 canvas.GetComponent<Canvas>().worldCamera =
                     GameObject.Find("XR Origin").GetComponentInChildren<Camera>();
-                    myPlayerController.playerID = player.Key;
+                myPlayerController.playerID = player.Key;
+                myPlayerController.SetPlayerStrategy();
                 myPlayerController.putPos = GameManager.Instance.GetNewPositions()[
                     myPlayerController.playerID - 1];
                 if (!PhotonNetwork.IsMasterClient) continue;
@@ -273,7 +275,6 @@ namespace Controller
                 var a = JsonConvert.SerializeObject(GameManager.Instance.GetMahjongList());
                 var b = JsonConvert.SerializeObject(GameManager.Instance.GetUserMahjongLists());
                 photonView.RPC(nameof(SetList), RpcTarget.All, a, b);
-                
             }
         }
 
@@ -374,7 +375,7 @@ namespace Controller
             {
                 foreach (var go in item.Value)
                 {
-                    var script = go.GetComponent<MouseEvent>();
+                    var script = go.GetComponent<MahjongAttr>();
                     if (!script.canPlay || script.num == 0)
                     {
                         continue;
@@ -395,7 +396,7 @@ namespace Controller
         {
             foreach (var go in myPlayerController.MyMahjong[nowTile])
             {
-                var script = go.GetComponent<MouseEvent>();
+                var script = go.GetComponent<MahjongAttr>();
                 script.canPlay = false;
                 go.transform.DOMove(myPlayerController.putPos - new Vector3(0.0f, 1.0f, 0.0f), 1f);
                 go.transform.DORotate(
@@ -410,12 +411,12 @@ namespace Controller
                 myPlayerController.putPos - new Vector3(0.0f, 1.0f, 0.0f),
                 Quaternion.Euler(GameManager.Instance.GetPlayerPutRotations()[
                     myPlayerController.playerID - 1]));
-            newGo.GetComponent<MouseEvent>().num = 0;
-            newGo.GetComponent<MouseEvent>().canPlay = false;
+            newGo.GetComponent<MahjongAttr>().num = 0;
+            newGo.GetComponent<MahjongAttr>().canPlay = false;
             myPlayerController.MyMahjong[nowTile].Add(newGo);
             SortMyMahjong();
             _gameManagerPhotonView.RPC(nameof(GameManager.Instance.DestroyItem),
-                RpcTarget.MasterClient);
+                RpcTarget.All, lastTurn);
             myPlayerController.putPos -=
                 GameManager.Instance.GetBias()[myPlayerController.playerID - 1];
         }
@@ -444,7 +445,7 @@ namespace Controller
 
                 //可以杠
                 if (myPlayerController.MyMahjong[id].Count == 3 &&
-                    myPlayerController.MyMahjong[id][0].GetComponent<MouseEvent>().canPlay)
+                    myPlayerController.MyMahjong[id][0].GetComponent<MahjongAttr>().canPlay)
                 {
                     if (ans == 1)
                     {

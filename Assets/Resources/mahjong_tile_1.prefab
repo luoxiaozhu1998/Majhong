@@ -12,11 +12,11 @@ GameObject:
   - component: {fileID: 2196448830275718683}
   - component: {fileID: 2188698463241529279}
   - component: {fileID: 2227182770763683635}
-  - component: {fileID: 9191545720723239589}
   - component: {fileID: 4203212145351280056}
   - component: {fileID: -4703650725864928310}
   - component: {fileID: 3081952461768335763}
   - component: {fileID: -6926346619693175134}
+  - component: {fileID: 589946621836101864}
   m_Layer: 0
   m_Name: mahjong_tile_1
   m_TagString: Untagged
@@ -103,21 +103,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1.3, y: 0.73072237, z: 1.9000001}
   m_Center: {x: 0, y: 0.13463894, z: 0.000000029802322}
---- !u!114 &9191545720723239589
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2165644579873657355}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f1cde68c2616c914dac3350b56693d41, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  id: 0
-  num: 0
-  canPlay: 1
 --- !u!54 &4203212145351280056
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -172,7 +157,7 @@ MonoBehaviour:
   m_SynchronizePosition: 1
   m_SynchronizeRotation: 1
   m_SynchronizeScale: 1
-  m_UseLocal: 1
+  m_UseLocal: 0
 --- !u!114 &-6926346619693175134
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -288,3 +273,18 @@ MonoBehaviour:
   m_ForceGravityOnDetach: 0
   m_RetainTransformParent: 1
   m_AttachPointCompatibilityMode: 0
+--- !u!114 &589946621836101864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2165644579873657355}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1cde68c2616c914dac3350b56693d41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  id: 0
+  num: 0
+  canPlay: 1

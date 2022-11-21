@@ -37,6 +37,8 @@ namespace Manager
         private readonly List<Vector3> _playerPutPositions;
         private readonly List<Vector3> _playerPutRotations;
         public readonly Dictionary<string, GameObject> Menus;
+        private readonly List<Vector3> _putMoveList;
+        private readonly List<Vector3> _putRotateList;
 
         public ResourceManager()
         {
@@ -118,6 +120,20 @@ namespace Manager
                 new(0f, -90f, 0f),
                 new(0f, 180f, 0f)
             };
+            _putMoveList = new List<Vector3>
+            {
+                new(25f, 2f, -20f),
+                new(20f, 2f, 25f),
+                new(-25f, 2f, 20f),
+                new(-20f, 2f, -25f)
+            };
+            _putRotateList = new List<Vector3>
+            {
+                new(0f, 90f, 0f),
+                new(0f, 0f, 0f),
+                new(0f, -90f, 0f),
+                new(0f, -180f, 0f)
+            };
         }
 
         public void InitWhenStart()
@@ -127,6 +143,16 @@ namespace Manager
                 _pickPoses.Add(GameObject.Find("PickPos" + i).transform);
             }
         }
+
+        public List<Vector3> GetPutMoveList()
+        {
+            return _putMoveList;
+        }
+        public List<Vector3> GetPutRotateList()
+        {
+            return _putRotateList;
+        }
+        
 
         public List<Vector3> GetNewList()
         {
@@ -180,6 +206,7 @@ namespace Manager
         {
             return _mahjongList;
         }
+
         public List<int> GetMahjongListInt()
         {
             return _mahjongList.Select(item => item.ID).ToList();
@@ -212,7 +239,7 @@ namespace Manager
                 var go = PhotonNetwork.Instantiate(
                     _userMahjongLists[id][i].Name, pos,
                     Quaternion.Euler(_rotate[id]));
-                var script = go.GetComponent<MouseEvent>();
+                var script = go.GetComponent<MahjongAttr>();
                 script.id = _userMahjongLists[id][i].ID;
                 pos += _bias[id];
                 go.transform.localScale = new Vector3(2f, 2f, 2f);
@@ -243,6 +270,7 @@ namespace Manager
         {
             return _userMahjongLists;
         }
+
         public List<List<int>> GetUserMahjongListsInt()
         {
             return _userMahjongLists.Select(list => list.Select(item => item.ID).ToList()).ToList();

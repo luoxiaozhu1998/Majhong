@@ -31,11 +31,7 @@ namespace Manager
             _resourceManager = new ResourceManager();
             _menuManager = new MenuManager();
         }
-
-        private void Start()
-        {
-            Screen.SetResolution(1600, 900, false);
-        }
+        
 
         public override void OnEnable()
         {
@@ -55,7 +51,14 @@ namespace Manager
             InitWhenStart();
             GameController.Instance.StartGame();
         }
-
+        public List<Vector3> GetPutMoveList()
+        {
+            return _resourceManager.GetPutMoveList();
+        }
+        public List<Vector3> GetPutRotateList()
+        {
+            return _resourceManager.GetPutRotateList();
+        }
         #region PlayerManager
 
         #endregion
@@ -166,7 +169,7 @@ namespace Manager
                     var go = PhotonNetwork.Instantiate(GetMahjongList()[0].Name,
                         GameController.Instance.myPlayerController.putPos,
                         Quaternion.Euler(GetRotateList()[nextUserId - 1]));
-                    var newScript = go.GetComponent<MouseEvent>();
+                    var newScript = go.GetComponent<MahjongAttr>();
                     newScript.canPlay = true;
                     var myMahjong = GameController.Instance.myPlayerController.MyMahjong;
                     newScript.id = GetMahjongList()[0].ID;
@@ -185,7 +188,7 @@ namespace Manager
                     {
                         foreach (var iGameObject in item.Value)
                         {
-                            var script = iGameObject.GetComponent<MouseEvent>();
+                            var script = iGameObject.GetComponent<MahjongAttr>();
                             if (script.num == 0 || !script.canPlay)
                             {
                                 continue;
@@ -216,6 +219,7 @@ namespace Manager
         [PunRPC]
         public void PlayTile(int id, int playerID)
         {
+            GameController.Instance.lastTurn = playerID;
             //每个客户端先把把当前轮次的ID设置好（下面代码可能会更改）
             GameController.Instance.nowTurn = playerID == PhotonNetwork.CurrentRoom.PlayerCount
                 ? 1
@@ -369,9 +373,11 @@ namespace Manager
         }
 
         [PunRPC]
-        public void DestroyItem()
+        public void DestroyItem(int playerId)
         {
+            if (GameController.Instance.myPlayerController.playerID != playerId) return;
             PhotonNetwork.Destroy(GameController.Instance.tile);
+            GameController.Instance.myPlayerController.BackTrace();
         }
 
         [PunRPC]
