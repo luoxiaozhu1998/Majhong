@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Controller;
 using Photon.Pun;
 using Photon.Realtime;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
+using Random = UnityEngine.Random;
 
 namespace Manager
 {
@@ -14,24 +17,33 @@ namespace Manager
     /// </summary>
     public class GameManager : MonoBehaviourPunCallbacks
     {
+        [SerializeField] private TMP_InputField roomNameInputField;
+        [SerializeField] private TMP_Text errorText;
+        [SerializeField] private TMP_Text roomNameText;
+        [SerializeField] private Transform roomListContent;
+        [SerializeField] private Transform playerListContent;
+        [SerializeField] private GameObject roomLIstItemPrefab;
+        [SerializeField] private GameObject playerLIstItemPrefab;
+        [SerializeField] private GameObject startRoomButton;
         public static GameManager Instance { get; private set; }
 
         private ResourceManager _resourceManager;
 
         private MenuManager _menuManager;
-        public PlayerController playerController;
+
         private void Awake()
         {
             if (Instance)
             {
                 Destroy(gameObject);
             }
+
             DontDestroyOnLoad(gameObject);
             Instance = this;
             _resourceManager = new ResourceManager();
             _menuManager = new MenuManager();
         }
-        
+
 
         public override void OnEnable()
         {
@@ -51,14 +63,17 @@ namespace Manager
             InitWhenStart();
             GameController.Instance.StartGame();
         }
+
         public List<Vector3> GetPutMoveList()
         {
             return _resourceManager.GetPutMoveList();
         }
+
         public List<Vector3> GetPutRotateList()
         {
             return _resourceManager.GetPutRotateList();
         }
+
         #region PlayerManager
 
         #endregion
@@ -69,18 +84,22 @@ namespace Manager
         {
             return _resourceManager.GetMahjongList();
         }
+
         public void SetMahjongList(List<Mahjong> mahjongList)
         {
             _resourceManager.SetMahjongList(mahjongList);
         }
+
         public List<List<Mahjong>> GetUserMahjongLists()
         {
-           return _resourceManager.GetUserMahjongLists();
+            return _resourceManager.GetUserMahjongLists();
         }
+
         public void SetUserMahjongLists(List<List<Mahjong>> userMahjongList)
         {
             _resourceManager.SetUserMahjongLists(userMahjongList);
         }
+
         public void MahjongSplit(int count)
         {
             _resourceManager.MahjongSplit(count);
@@ -178,10 +197,13 @@ namespace Manager
                     {
                         myMahjong[newScript.id] = new List<GameObject>();
                     }
+
                     if (GameController.Instance.CheckWin(newScript.id))
                     {
-                        photonView.RPC(nameof(CanH),RpcTarget.All,GameController.Instance.myPlayerController.playerID);
+                        photonView.RPC(nameof(CanH), RpcTarget.All,
+                            GameController.Instance.myPlayerController.playerID);
                     }
+
                     myMahjong[newScript.id].Add(go);
                     var idx = 1;
                     foreach (var item in myMahjong)
@@ -387,9 +409,119 @@ namespace Manager
             GameController.Instance.text.text = "You Lose!";
         }
 
+
+        public override void OnConnectedToMaster()
+        {
+            PhotonNetwork.JoinLobby();
+            PhotonNetwork.AutomaticallySyncScene = true;
+        }
+
         public void JoinLobby()
         {
-            Launcher.Instance.JoinLobby();
+            OpenMenu("LoadingMenu");
+            PhotonNetwork.ConnectUsingSettings();
+        }
+
+        public override void OnJoinedLobby()
+        {
+            OpenMenu("TitleMenu");
+            Debug.Log("OnJoinedLobby()");
+            PhotonNetwork.NickName = "Player" + Random.Range(0, 1000).ToString("0000");
+        }
+
+        public void CreateRoom()
+        {
+            if (string.IsNullOrEmpty(roomNameInputField.text))
+            {
+                return;
+            }
+
+            PhotonNetwork.CreateRoom(roomNameInputField.text, new RoomOptions {MaxPlayers = 4});
+            OpenMenu("LoadingMenu");
+        }
+
+        public override void OnJoinedRoom()
+        {
+            roomNameText.text = PhotonNetwork.CurrentRoom.Name;
+            OpenMenu("RoomMenu");
+            foreach (Transform item in playerListContent)
+            {
+                Destroy(item.gameObject);
+            }
+
+            var players = PhotonNetwork.PlayerList;
+            foreach (var t in players)
+            {
+                Instantiate(playerLIstItemPrefab, playerListContent).GetComponent<PlayerListItem>()
+                    .Setup(t);
+            }
+
+            startRoomButton.SetActive(PhotonNetwork.IsMasterClient);
+        }
+
+        public override void OnJoinRoomFailed(short returnCode, string message)
+        {
+            errorText.text = "Room Creation Failed" + message;
+            OpenMenu("ErrorMenu");
+        }
+
+        public void LeaveRoom()
+        {
+            PhotonNetwork.LeaveRoom();
+            OpenMenu("LoadingMenu");
+        }
+
+        public override void OnLeftRoom()
+        {
+            OpenMenu("TitleMenu");
+        }
+
+        public override void OnRoomListUpdate(List<RoomInfo> roomList)
+        {
+            if (roomList.Count <= 0) return;
+            foreach (Transform t in roomListContent)
+            {
+                Destroy(t.gameObject);
+            }
+
+            foreach (var info in roomList.Where(info => !info.RemovedFromList))
+            {
+                Instantiate(roomLIstItemPrefab, roomListContent).GetComponent<RoomListItem>()
+                    .SetUp(info);
+            }
+        }
+
+        public void JoinRoom(RoomInfo info)
+        {
+            OpenMenu("LoadingMenu");
+            PhotonNetwork.JoinRoom(info.Name);
+        }
+
+        public override void OnPlayerEnteredRoom(Player newPlayer)
+        {
+            Instantiate(playerLIstItemPrefab, playerListContent)
+                .GetComponent<PlayerListItem>()
+                .Setup(newPlayer);
+        }
+
+        public void StartGame()
+        {
+            OpenMenu("LoadingMenu");
+            PhotonNetwork.LoadLevel(1);
+        }
+
+        public override void OnMasterClientSwitched(Player newMasterClient)
+        {
+            startRoomButton.SetActive(PhotonNetwork.IsMasterClient);
+        }
+
+        public void QuitGame()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+Application.Quit();
+#endif
         }
     }
 }

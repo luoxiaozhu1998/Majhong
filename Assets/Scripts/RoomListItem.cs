@@ -1,3 +1,4 @@
+using Manager;
 using Photon.Realtime;
 using TMPro;
 using UnityEngine;
@@ -16,6 +17,6 @@ public class RoomListItem : MonoBehaviour
 
     public void OnClick()
     {
-        Launcher.Instance.JoinRoom(_info);
+        GameManager.Instance.JoinRoom(_info);
     }
 }
