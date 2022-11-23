@@ -1,8 +1,8 @@
 ﻿namespace Tools
 {
-    public class Constants
+    public static class Constants
     {
-        public const int MaxId = 34;
+        public static int MaxId = 34;
         public const int MaxPlayer = 4;
     }
 }

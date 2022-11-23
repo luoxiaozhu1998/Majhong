@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
@@ -246,8 +247,10 @@ namespace Controller
         private void SetList(string a, string b)
         {
             GameManager.Instance.SetMahjongList(JsonConvert.DeserializeObject<List<Mahjong>>(a));
+            Debug.Log(a);
             GameManager.Instance.SetUserMahjongLists(
                 JsonConvert.DeserializeObject<List<List<Mahjong>>>(b));
+            Debug.Log(b);
             myPlayerController.MyMahjong =
                 GameManager.Instance.GenerateMahjongAtStart(myPlayerController.playerID - 1);
         }
@@ -258,18 +261,16 @@ namespace Controller
         private void GeneratePlayers()
         {
             var players = PhotonNetwork.CurrentRoom.Players;
-            foreach (var player in players.Where(player => player.Value.IsLocal))
+            var index = 1 + players.Count(player => player.Key < PhotonNetwork.LocalPlayer.ActorNumber);
+            foreach (var playerController in from player in players where player.Value.IsLocal select GameManager.Instance.GeneratePlayer(index - 1)
+                         .GetComponent<PlayerController>())
             {
-                var playerController = GameManager.Instance.GeneratePlayer(player.Key - 1)
-                    .GetComponent<PlayerController>();
                 myPlayerController = playerController;
                 canvas.GetComponent<Canvas>().planeDistance = 5.0f;
-                canvas.GetComponent<Canvas>().worldCamera =
-                    GameObject.Find("XR Origin").GetComponentInChildren<Camera>();
-                myPlayerController.playerID = player.Key;
+                canvas.GetComponent<Canvas>().worldCamera = GameObject.Find("XR Origin").GetComponentInChildren<Camera>();
+                myPlayerController.playerID = index;
                 myPlayerController.SetPlayerStrategy();
-                myPlayerController.putPos = GameManager.Instance.GetNewPositions()[
-                    myPlayerController.playerID - 1];
+                myPlayerController.putPos = GameManager.Instance.GetNewPositions()[myPlayerController.playerID - 1];
                 if (!PhotonNetwork.IsMasterClient) continue;
                 GameManager.Instance.MahjongSplit(players.Count);
                 var a = JsonConvert.SerializeObject(GameManager.Instance.GetMahjongList());

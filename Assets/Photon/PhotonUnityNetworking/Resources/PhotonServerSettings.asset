@@ -20,7 +20,7 @@ MonoBehaviour:
     AppVersion: 
     UseNameServer: 0
     FixedRegion: 
-    Server: 169.254.223.237
+    Server: 10.177.74.114
     Port: 5055
     ProxyServer: 
     Protocol: 0
@@ -63,6 +63,7 @@ MonoBehaviour:
   - NoOneWin
   - SendList
   - SetList
+  - SendMaxId
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

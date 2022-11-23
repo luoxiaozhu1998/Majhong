@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Controller;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
+using Tools;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.Serialization;
+using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
 namespace Manager
@@ -25,6 +25,8 @@ namespace Manager
         [SerializeField] private GameObject roomLIstItemPrefab;
         [SerializeField] private GameObject playerLIstItemPrefab;
         [SerializeField] private GameObject startRoomButton;
+        [SerializeField] private Toggle withHonorToggle;
+        [SerializeField] private Toggle withoutHonorToggle;
         public static GameManager Instance { get; private set; }
 
         private ResourceManager _resourceManager;
@@ -431,13 +433,15 @@ namespace Manager
 
         public void CreateRoom()
         {
-            if (string.IsNullOrEmpty(roomNameInputField.text))
+            if (string.IsNullOrEmpty(roomNameInputField.text) ||
+                (withHonorToggle.isOn == false && withoutHonorToggle.isOn == false))
             {
                 return;
             }
 
-            PhotonNetwork.CreateRoom(roomNameInputField.text, new RoomOptions {MaxPlayers = 4});
+            PhotonNetwork.CreateRoom(roomNameInputField.text, new RoomOptions {MaxPlayers = 4 });
             OpenMenu("LoadingMenu");
+            _resourceManager.LoadMahjong();
         }
 
         public override void OnJoinedRoom()
@@ -473,6 +477,7 @@ namespace Manager
 
         public override void OnLeftRoom()
         {
+            
             OpenMenu("TitleMenu");
         }
 
@@ -502,8 +507,18 @@ namespace Manager
             Instantiate(playerLIstItemPrefab, playerListContent)
                 .GetComponent<PlayerListItem>()
                 .Setup(newPlayer);
+            if (PhotonNetwork.IsMasterClient)
+            {
+                photonView.RPC(nameof(SendMaxId), RpcTarget.Others, Constants.MaxId);
+            }
         }
+        
 
+        [PunRPC]
+        private void SendMaxId(int id)
+        {
+            Constants.MaxId = id;
+        }
         public void StartGame()
         {
             OpenMenu("LoadingMenu");
@@ -512,7 +527,26 @@ namespace Manager
 
         public override void OnMasterClientSwitched(Player newMasterClient)
         {
+            if (startRoomButton == null) return;
+            if (PhotonNetwork.IsMasterClient)
+            {
+                _resourceManager.LoadMahjong();
+            }
             startRoomButton.SetActive(PhotonNetwork.IsMasterClient);
+        }
+
+        public void SetMaxIndexWithHonor()
+        {
+            withoutHonorToggle.isOn = false;
+
+            Constants.MaxId = 34;
+        }
+
+        public void SetMaxIndexWithoutHonor()
+        {
+            
+            withHonorToggle.isOn = false;
+            Constants.MaxId = 27;
         }
 
         public void QuitGame()

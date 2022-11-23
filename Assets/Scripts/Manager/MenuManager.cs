@@ -30,6 +30,7 @@ namespace Manager
 
         public void OpenMenu(string menuName)
         {
+            if (_menus[menuName] == null) return;
             _menus[menuName].SetActive(true);
             foreach (var t in _menus.Where(t => t.Key != menuName))
             {

@@ -42,16 +42,6 @@ namespace Manager
 
         public ResourceManager()
         {
-            for (var j = 0; j < Constants.MaxPlayer; j++)
-            {
-                for (var i = 1; i <= Constants.MaxId; i++)
-                {
-                    _mahjongList.Add(
-                        new Mahjong(i, "mahjong_tile_" + i));
-                }
-            }
-
-            _mahjongList = _mahjongList.OrderBy(_ => Guid.NewGuid()).ToList();
             Menus = new Dictionary<string, GameObject>
             {
                 {"LoadingMenu", GameObject.Find("LoadingMenu")},
@@ -184,6 +174,23 @@ namespace Manager
             return _playerPutRotations;
         }
 
+        public void LoadMahjong()
+        {
+            for (var j = 0; j < Constants.MaxPlayer; j++)
+            {
+                for (var i = 1; i <= Constants.MaxId; i++)
+                {
+                    _mahjongList.Add(
+                        new Mahjong(i, "mahjong_tile_" + i));
+                }
+            }
+            _mahjongList = _mahjongList.OrderBy(_ => Guid.NewGuid()).ToList();
+        }
+
+        public void ClearMahjong()
+        {
+            _mahjongList.Clear();
+        }
         /// <summary>
         /// 分割麻将为count组,第一组14个,后count-1组13个
         /// </summary>
@@ -205,11 +212,6 @@ namespace Manager
         public List<Mahjong> GetMahjongList()
         {
             return _mahjongList;
-        }
-
-        public List<int> GetMahjongListInt()
-        {
-            return _mahjongList.Select(item => item.ID).ToList();
         }
 
         /// <summary>
