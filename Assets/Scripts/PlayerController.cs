@@ -23,15 +23,16 @@ public class PlayerController : MonoBehaviour
     {
         _pv = GetComponent<PhotonView>();
         MyMahjong = new SortedDictionary<int, List<GameObject>>();
-        _xrOriginTransform = GameObject.Find("XR Origin").transform;
+        //_xrOriginTransform = GameObject.Find("XR Rig").transform;
     }
 
-    private void Update()
-    {
-        if (!_pv.IsMine) return;
-        _xrOriginTransform.position = transform.position;
-        _xrOriginTransform.rotation = transform.rotation;
-    }
+    // private void Update()
+    // {
+    //     if (!_pv.IsMine) return;
+    //     var transform1 = transform;
+    //     _xrOriginTransform.position = transform1.position;
+    //     _xrOriginTransform.rotation = transform1.rotation;
+    // }
 
     public void SetPlayerStrategy()
     {

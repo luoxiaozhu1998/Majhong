@@ -7,6 +7,7 @@ using DG.Tweening.Plugins.Options;
 using Manager;
 using Newtonsoft.Json;
 using Photon.Pun;
+using RootMotion.Demos;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -267,7 +268,8 @@ namespace Controller
             {
                 myPlayerController = playerController;
                 canvas.GetComponent<Canvas>().planeDistance = 5.0f;
-                canvas.GetComponent<Canvas>().worldCamera = GameObject.Find("XR Origin").GetComponentInChildren<Camera>();
+                canvas.GetComponent<Canvas>().worldCamera = myPlayerController
+                    .GetComponent<VRIK_PUN_Player>().vrRig.GetComponentInChildren<Camera>();
                 myPlayerController.playerID = index;
                 myPlayerController.SetPlayerStrategy();
                 myPlayerController.putPos = GameManager.Instance.GetNewPositions()[myPlayerController.playerID - 1];
@@ -522,6 +524,11 @@ namespace Controller
             }
 
             return cnt2 + cnt3 + cnt4 == 5 && cnt2 == 1;
+        }
+
+        public void SetCamera(Camera canvasCamera)
+        {
+            canvas.GetComponent<Canvas>().worldCamera = canvasCamera;
         }
     }
 }
